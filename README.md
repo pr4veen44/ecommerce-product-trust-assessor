@@ -1,142 +1,219 @@
-# ECommerce Product Trust Assessor
+# E-Commerce Product Trust Assessor
 
-An explainable AI system that generates a 0–100 Trust Score from product listings, reviews, and seller data. Uses an ensemble of XGBoost, LightGBM, and DistilBERT to go beyond star ratings and actually answer: *"Can I trust this product?"*
+An explainable AI system that evaluates e-commerce product reliability and generates a Product Trust Score (0–100) using customer reviews, ratings, listing metadata, and machine learning.
 
 ---
 
 ## Overview
 
-This project simulates a real-world product trust evaluation pipeline where listing data and reviews are processed through multiple specialized models, each scoring a different dimension of trust.
+This project analyzes product reviews and listing information from the Amazon Reviews 2023 dataset to help users assess product reliability.
 
-Each input (product title, description, reviews, seller stats) is passed through five modules — review authenticity, sentiment quality, listing quality, seller reliability, and return risk. The results are combined into a single weighted score with SHAP explanations so you can see *why* a product scored the way it did, not just what it scored.
+Review sentiment, rating quality, review consistency, verified purchases, suspicious review patterns, and listing completeness are combined into a weighted trust score. Each assessment includes a component breakdown, evidence coverage, confidence level, strengths, warnings, and a step-by-step explanation of how the final score was calculated.
 
-You can also inject your own product data through the frontend form or hit the API directly to test different scenarios.
+The system also uses machine learning to identify anomalous review patterns and predict review helpfulness, with SHAP explanations to make model predictions more interpretable.
+
+The trust score is intended for screening and exploration, not as definitive proof of product quality or review authenticity.
 
 ---
 
 ## Tech Stack
 
-- **Machine Learning** — XGBoost, LightGBM, scikit-learn
-- **NLP** — DistilBERT (HuggingFace Transformers)
-- **Explainability** — SHAP TreeExplainer
-- **Backend** — FastAPI + Uvicorn
-- **Frontend** — Next.js 15, TypeScript, Tailwind CSS, Recharts
+- **Machine Learning** — XGBoost, Isolation Forest, scikit-learn
+- **Natural Language Processing** — DistilBERT for sentiment analysis
+- **Explainable AI** — SHAP
+- **Backend** — Python
+- **Frontend** — NiceGUI
+- **Database** — SQLite, SQLAlchemy
+- **Data Storage** — Parquet, Pandas
+- **Dataset** — Amazon Reviews 2023 (Hugging Face)
 
 ---
 
 ## Project Structure
 
-```
-ECommerce-Product-Trust-Assessor/
-├── notebooks/
-│   ├── 01_review_authenticity_model.ipynb
-│   ├── 02_sentiment_quality_distilbert.ipynb
-│   └── 03_seller_reliability_return_risk.ipynb
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── api/routes.py
-│   │   ├── models/schemas.py
-│   │   ├── services/
-│   │   │   ├── trust_analyzer.py
-│   │   │   ├── authenticity_scorer.py
-│   │   │   ├── sentiment_scorer.py
-│   │   │   ├── listing_scorer.py
-│   │   │   ├── seller_return_scorer.py
-│   │   │   └── shap_explainer.py
-│   │   └── scoring/trust_engine.py
-│   └── requirements.txt
-└── frontend/
-    ├── app/
-    ├── components/
-    └── lib/
+```text
+e-commerce-product-trust-assessor/
+├── main.py
+├── requirements.txt
+├── .env.example
+├── scripts/
+│   ├── prepare_dataset.py
+│   ├── train_models.py
+│   ├── assess_products.py
+│   └── run_pipeline.py
+├── trust_assessor/
+│   ├── config.py
+│   ├── data/
+│   ├── features/
+│   ├── nlp/
+│   ├── ml/
+│   ├── scoring/
+│   ├── explain/
+│   ├── db/
+│   ├── services/
+│   └── ui/
+│       └── pages/
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── trust_assessor.sqlite
+└── models/
 ```
 
 ---
 
 ## Running the Project
 
-### Backend
+### Backend & Dashboard
 
 ```bash
-cd backend
-python -m venv venv && source venv/bin/activate
+# Create virtual environment
+python -m venv .venv
+
+# Activate on Windows PowerShell
+.venv\Scripts\Activate.ps1
+
+# Activate on Linux/macOS
+source .venv/bin/activate
+
+# Install CPU-only PyTorch
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# Install dependencies
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
 ```
 
-### Frontend
+### Prepare the Dataset
 
 ```bash
-cd frontend
-npm install
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
-npm run dev
+python scripts/prepare_dataset.py
 ```
 
-Open `http://localhost:3000`.
+Downloads a configurable sample of Amazon Reviews 2023, cleans the data, engineers features, and generates review sentiment scores.
+
+### Train the Models
+
+```bash
+python scripts/train_models.py
+```
+
+Trains the anomaly detection and review helpfulness models and generates explainability artifacts where supported.
+
+### Assess Products
+
+```bash
+python scripts/assess_products.py
+```
+
+Calculates trust scores for eligible products and stores the results in SQLite.
+
+### Launch the Application
+
+```bash
+python main.py
+```
+
+Open `http://127.0.0.1:8080` in your browser.
+
+To run the complete data preparation, training, and assessment pipeline:
+
+```bash
+python scripts/run_pipeline.py
+```
 
 ---
 
 ## How It Works
 
-- Product data is submitted through the frontend form or API
-- Each module independently scores a different trust signal
-- Scores are combined using a fixed weighted formula
-- SHAP values explain which features drove the final score up or down
-
-The models are trained on real datasets — Amazon Reviews 2023 for the review modules, and the Olist Brazilian E-Commerce dataset for seller and return risk.
-
----
-
-## Trust Score Formula
-
-```
-Trust Score =
-  30% × Review Authenticity
-+ 25% × Sentiment Quality
-+ 20% × Seller Reliability
-+ 15% × Listing Quality
-+ 10% × Return Risk Safety
-```
+- Reviews and product metadata are sampled from Amazon Reviews 2023.
+- The data is cleaned, processed, and transformed into product and review-level features.
+- DistilBERT estimates review sentiment, while configurable rules identify suspicious review patterns.
+- Isolation Forest detects anomalous review behavior without requiring fake-review labels.
+- XGBoost predicts review helpfulness using observed helpful-vote labels.
+- SHAP explains model predictions, while rule-based explanations describe suspicious signals.
+- Eight weighted components are combined to calculate the final Product Trust Score.
+- Assessments, scoring configurations, and version information are stored for historical comparison.
 
 ---
 
 ## Features
 
-- Five-module scoring pipeline with independent models
-- Weighted ensemble into a single 0–100 Trust Score
-- SHAP explanations for every prediction
-- Strengths and weaknesses surfaced automatically
-- Return risk classification (LOW / MEDIUM / HIGH)
+- Product Trust Score ranging from 0 to 100
+- Review sentiment analysis using DistilBERT
+- Detection of repeated reviews, suspicious bursts, and anomalous reviewer behavior
+- Rating quality and consistency analysis
+- Verified-purchase and listing completeness analysis
+- Machine learning-based review helpfulness prediction
+- SHAP-based model explanations
+- Component-wise score breakdown and evidence coverage
+- Product search and detailed product assessments
+- Side-by-side product comparison
+- Assessment history and model insights
+- Configurable scoring weights and thresholds
+- Persistent storage using SQLite and Parquet
 
 ---
 
-## Demo Flow
+## Trust Score Components
 
-1. Open the analyzer → paste in a product listing
-2. Submit → all five modules run in parallel
-3. View the Trust Score gauge and radar breakdown
-4. Read the SHAP panel → see which features drove the score
-5. Check the return risk classification and listed weaknesses
+The default scoring configuration uses eight components:
+
+| Component | Weight |
+|---|---:|
+| Rating Quality | 22% |
+| Review Authenticity Signals | 18% |
+| Rating Consistency | 12% |
+| Review Volume | 12% |
+| Verified Purchases | 12% |
+| Review Sentiment | 12% |
+| Listing Completeness | 8% |
+| Review Informativeness | 4% |
+
+Missing components are excluded rather than imputed, and the remaining weights are normalized. The system also reports evidence coverage and confidence to indicate how much information supports an assessment.
+
+Products with insufficient reviews or evidence do not receive a trust score.
 
 ---
 
-## Model Details
+## Machine Learning Models
 
-| Module | Model | Weight |
-|--------|-------|--------|
-| Review Authenticity | XGBoost | 30% |
-| Sentiment Quality | DistilBERT | 25% |
-| Seller Reliability | LightGBM | 20% |
-| Listing Quality | Rule-based NLP | 15% |
-| Return Risk | LightGBM | 10% |
+| Model | Purpose |
+|---|---|
+| DistilBERT | Estimates positive and negative review sentiment |
+| Isolation Forest | Identifies anomalous review patterns |
+| XGBoost | Predicts whether a review receives at least one helpful vote |
+| SHAP | Explains model predictions and feature contributions |
+
+The helpfulness model is evaluated using product-grouped train, validation, and test splits. Votes are excluded from its input features to prevent target leakage.
+
+Isolation Forest and suspicious-review rules do not establish whether a review is fake because the dataset does not provide ground-truth fake-review labels.
 
 ---
 
-## API Endpoints
+## Evaluation
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/analyze` | Run full trust analysis on a product |
-| `GET /api/health` | Check backend status |
+The review helpfulness model is evaluated using:
+
+- ROC-AUC
+- PR-AUC
+- F1-score
+- Brier score
+- Comparison against a logistic regression baseline and the no-skill rate
+
+The system also provides diagnostic insights into anomaly scores and suspicious-signal distributions.
+
+Sentiment agreement with star ratings is treated as a proxy check, not as a measure of model accuracy.
+
+---
+
+## Data Source & Limitations
+
+The project uses the [Amazon Reviews 2023 dataset](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023) from Hugging Face.
+
+- The dataset is sampled by category rather than downloaded in full.
+- Suspicious review signals indicate patterns worth investigating, not confirmed fraudulent activity.
+- Sentiment predictions can be inaccurate for sarcasm, short reviews, or mixed opinions.
+- Anomaly detection results depend on the sampled data and configured thresholds.
+- Return risk, seller reliability, counterfeit detection, and price fairness are not assessed because the required evidence is unavailable.
+- The trust score is a configurable heuristic and has not been validated against ground-truth product trustworthiness labels.
+
