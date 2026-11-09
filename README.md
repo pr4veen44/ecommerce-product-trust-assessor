@@ -22,7 +22,7 @@ The trust score is intended for screening and exploration, not as definitive pro
 - **Natural Language Processing** — DistilBERT for sentiment analysis
 - **Explainable AI** — SHAP
 - **Backend** — Python
-- **Frontend** — NiceGUI
+- **API** — FastAPI + Uvicorn
 - **Database** — SQLite, SQLAlchemy
 - **Data Storage** — Parquet, Pandas
 - **Dataset** — Amazon Reviews 2023 (Hugging Face)
@@ -51,8 +51,9 @@ e-commerce-product-trust-assessor/
 │   ├── explain/
 │   ├── db/
 │   ├── services/
-│   └── ui/
-│       └── pages/
+│   └── api/
+│       ├── __init__.py
+│       └── app.py
 ├── data/
 │   ├── raw/
 │   ├── processed/
@@ -113,7 +114,9 @@ Calculates trust scores for eligible products and stores the results in SQLite.
 python main.py
 ```
 
-Open `http://127.0.0.1:8080` in your browser.
+The dashboard is available at `http://127.0.0.1:8080`. Open `http://127.0.0.1:8080/docs` for the interactive OpenAPI explorer.
+
+The main resources are available under `/api`: `/dashboard`, `/products`, `/products/{asin}`, `/compare`, `/history`, `/models`, and `/methodology`.
 
 To run the complete data preparation, training, and assessment pipeline:
 

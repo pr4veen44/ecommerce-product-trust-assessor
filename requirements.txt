@@ -3,8 +3,10 @@
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu
 torch>=2.2
 
-# UI
-nicegui>=2.20,<4
+# API
+fastapi>=0.115,<0.116
+starlette>=0.40,<0.42
+uvicorn[standard]>=0.30
 
 # Data
 pandas>=2.2

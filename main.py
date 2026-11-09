@@ -1,7 +1,11 @@
 #!/usr/bin/env python
-"""Launch the E-Commerce Product Trust Assessor dashboard:  python main.py"""
+"""Launch the E-Commerce Product Trust Assessor API:  python main.py"""
 
-from trust_assessor.ui.app import run
+import uvicorn
+
+from trust_assessor.api.app import app
+from trust_assessor.config import get_settings
 
 if __name__ in {"__main__", "__mp_main__"}:
-    run()
+    settings = get_settings()
+    uvicorn.run(app, host=settings.ui_host, port=settings.ui_port, reload=False)
